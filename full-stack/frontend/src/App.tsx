@@ -1,17 +1,24 @@
 import axios from 'axios'
 import './App.css'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 function App() {
 
   const [players , setPlayers] = useState([])
 
-  axios.get('http://localhost:4000/footballers')
-  .then((res) => {
-    setPlayers(res.data)
-  })
-  .catch((err) => console.log(err)
-  )
+  useEffect(()=> {
+    axios.get('/api/footballers')
+    .then((res) => {
+      setPlayers(res.data)
+    })
+    .catch((err) => console.log(err)
+    )
+  
+
+  } , [])
+
+  console.log(players);
+  
 
   return (
     <>
