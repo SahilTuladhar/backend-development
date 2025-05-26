@@ -12,7 +12,7 @@ const asyncHandler = (requestHandler) => {
 export default asyncHandler
 
 
-// Method 1: Without Promise
+// Method 1: Without Promiseerror handling midd
 
 // const aysncHandler = (requestHandler) => async(req , res , next) => {
 
@@ -24,3 +24,4 @@ export default asyncHandler
 //     }
 
 // } 
+
