@@ -1,6 +1,7 @@
 import { User } from '../models/user.model.js'
 import ApiError from '../utils/ApiErrors.js'
 import asyncHandler from '../utils/asyncHandler.js'
+import uploadOnCloudinary from '../utils/Cloudinary.js'
 
 const registerUser = asyncHandler( async(req, res) => {
     
@@ -15,29 +16,66 @@ const registerUser = asyncHandler( async(req, res) => {
 
    // req.body gains takes data from frontend that is sent from form or as a JSON format
 
-   // const {fullName , email , username , password} = req.body 
+   const {fullName , email , username , password} = req.body 
+   
+   console.log('Hi,', fullName);
+   console.log('Your Email is:', email);
+   
 
-   // // validation code 
+   // validation code 
 
-   //  const check_list = [fullName , email , username , password].map((field) => field?.trim() === "")
+    const check_list = [fullName , email , username , password].map((field) => field?.trim() === "")
     
-   // if ( check_list.includes(true) ) {
-   //   console.log('empty field detected');
+   if ( check_list.includes(true) ) {
+     console.log('empty field detected');
      
-   //   throw new ApiError(500 , 'Missing entry fields expected')
-     
-   // }
+     throw new ApiError(400, 'Missing entry fields expected')
+      
+   }
 
-   // const existedUser = await User.findOne({
-   //  $or: [{username} , {email}]
-   // })
+   const existedUser = await User.findOne({
+    $or: [{username} , {email}]
+   })
 
-   // if(existedUser){
-   //  throw new ApiError(409 , 'User has with same username or email has already been registered')
-   // }
+   if(existedUser){
+    throw new ApiError(409 , 'User has with same username or email has already been registered')
+   }
 
-   // console.log("email:" , email);
+   // Checking for files present in the request
 
+  const avatarLocalPath =  req.files?.avatar[0]?.path
+  const coverImgLocalPath = req.files?.coverImage[0]?.path
+
+  // check if avatar Exists
+
+  if(!avatarLocalPath){
+    throw new ApiError(400 , 'Avatar Does not exists')
+  }
+  
+  // checking the path of the files uploaded
+  console.log(avatarLocalPath);
+  
+  // uploading in cloudnary 
+
+  const cloudAvatar = await uploadOnCloudinary(avatarLocalPath)
+  const cloudCoverImg = await uploadOnCloudinary(coverImgLocalPath)
+
+  if(!cloudAvatar) {
+   throw new ApiError(400 , "Avatar not uploaded to cloudinary")
+  }
+
+  //creating an record and sending to database using User model
+   User.create({
+      fullName,
+      avatar: cloudAvatar.url,
+      coverImg: cloudCoverImg?.url || " " ,
+      email,
+      username: username.toLowerCase(),
+
+   })
+
+
+ 
    res.status(200).json({
       text: "User has been Registered"
    })

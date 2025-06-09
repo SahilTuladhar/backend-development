@@ -18,7 +18,7 @@ userRouter.route('/register').post(
         }
     ])
     ,registerUser)
-
+    
 userRouter.route('/login').get(loginUser)
 
 
