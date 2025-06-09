@@ -15,28 +15,32 @@ const registerUser = asyncHandler( async(req, res) => {
 
    // req.body gains takes data from frontend that is sent from form or as a JSON format
 
-   const {fullName , email , username , password} = req.body 
+   // const {fullName , email , username , password} = req.body 
 
-   // validation code 
+   // // validation code 
 
-    const check_list = [fullName , email , username , password].map((field) => field?.trim() === "")
+   //  const check_list = [fullName , email , username , password].map((field) => field?.trim() === "")
     
-   if ( check_list.includes(true) ) {
-     console.log('empty field detected');
+   // if ( check_list.includes(true) ) {
+   //   console.log('empty field detected');
      
-     throw new ApiError(500 , 'Missing entry fields expected')
+   //   throw new ApiError(500 , 'Missing entry fields expected')
      
-   }
+   // }
 
-   const existedUser = await User.findOne({
-    $or: [{username} , {email}]
+   // const existedUser = await User.findOne({
+   //  $or: [{username} , {email}]
+   // })
+
+   // if(existedUser){
+   //  throw new ApiError(409 , 'User has with same username or email has already been registered')
+   // }
+
+   // console.log("email:" , email);
+
+   res.status(200).json({
+      text: "User has been Registered"
    })
-
-   if(existedUser){
-    throw new ApiError(409 , 'User has with same username or email has already been registered')
-   }
-
-   console.log("email:" , email);
    
 
 

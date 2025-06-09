@@ -4,9 +4,9 @@ import {registerUser , loginUser} from '../controllers/users.controller.js'
 import {upload} from '../middlewares/multer.middleware.js'
 
 
-const router = Router()
+const userRouter = Router()
 
-router.route('/register').post(
+userRouter.route('/register').post(
     upload.fields([
         {
             name: 'avatar',
@@ -19,7 +19,7 @@ router.route('/register').post(
     ])
     ,registerUser)
 
-router.route('/login').get(loginUser)
+userRouter.route('/login').get(loginUser)
 
 
-export default router 
+export default userRouter 
