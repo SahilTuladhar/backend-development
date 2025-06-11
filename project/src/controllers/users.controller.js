@@ -103,12 +103,39 @@ const registerUser = asyncHandler( async(req, res) => {
 
 })
 
-const loginUser = asyncHandler( async(req , res) => {
 
- res.status(201).json({
-    message : "User Logged In"
- })
+// take data from front end using req body
+//  perform validationa on the input
+// check if values exist in database - GET request
+// check if the entered values acutally are mapped together in database
+// Generate REFRESH TOKENS and ACCESS TOKENS
+// send secure cookies and response
 
+
+const loginUser = asyncHandler(async(req,res) => {
+
+   // taking data
+
+   const {email , username , password} = req.body
+
+   if (!username || !email){
+      throw new ApiError(400 , "Username or email is required")
+   }
+
+   if(!password){
+      throw new ApiError(400 , "Password is required")
+   }
+
+   // finding the user in the database
+
+   const userExists = User.findOne({
+      $or:[{username},{email}]
+   })
+
+   if(!userExists){
+      throw new ApiError(404,'User does not Exist')
+   }
+   
 })
 
 export {registerUser , loginUser} 
