@@ -4,6 +4,32 @@ import asyncHandler from '../utils/asyncHandler.js'
 import uploadOnCloudinary from '../utils/Cloudinary.js'
 import ApiResponse from '../utils/ApiResponse.js'
 
+
+const generateAccessAndRefreshTokens = async(userID) => {
+   
+   try{
+      const user = await User.findById(userID)
+
+      const accessToken = user.generateAccessToken()
+      const refreshToken = user.generateRefreshToken()
+   
+      //storing the refreshToken in database
+   
+      user.refreshToken = refreshToken
+   
+      await user.save({ validateBeforeSave: false})
+   
+      return {accessToken , refreshToken}
+
+   }catch(err){
+     
+      throw new ApiError(500, "Something went wrong while generating Tokens")
+   }
+
+   
+
+}
+
 const registerUser = asyncHandler( async(req, res) => {
     
    // take data from the frontend 
@@ -108,7 +134,10 @@ const registerUser = asyncHandler( async(req, res) => {
 //  perform validationa on the input
 // check if values exist in database - GET request
 // check if the entered values acutally are mapped together in database
-// Generate REFRESH TOKENS and ACCESS TOKENS
+// Generate REFRESH TOKENS and ACCESS TOKENS 
+//  - create a seperaete function
+//   - finds the user and then generates tokens
+//   - Returns the tokens
 // send secure cookies and response
 
 
@@ -128,13 +157,37 @@ const loginUser = asyncHandler(async(req,res) => {
 
    // finding the user in the database
 
-   const userExists = User.findOne({
+   const user= User.findOne({
       $or:[{username},{email}]
    })
 
-   if(!userExists){
+   if(!user){
       throw new ApiError(404,'User does not Exist')
    }
+
+   //checking for correct password
+   // Note that the methods defined within the model is obtained from the instance of the record of the model instead of the mongoDB model instance
+
+   const isPasswordVlaid = await user.isPasswordCorrect(password)
+
+   if(!password){
+      throw new ApiError(401, "Password credientials not valid")
+   }
+
+   // Creating Access and Request Tokens -method technique
+
+   const {refreshToken , accessToken} = await generateAccessAndRefreshTokens(user._id)
+
+   // Passing the data back to the user- removing some unwanted fields
+     // - accessing the user from the database again to reflect the refresh token
+   
+   const loggedInUser = await User.findById(user._id).select(
+      "-password -refreshToken"
+   )
+     
+
+
+
    
 })
 
