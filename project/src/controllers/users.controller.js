@@ -2,6 +2,7 @@ import { User } from '../models/user.model.js'
 import ApiError from '../utils/ApiErrors.js'
 import asyncHandler from '../utils/asyncHandler.js'
 import uploadOnCloudinary from '../utils/Cloudinary.js'
+import ApiResponse from '../utils/ApiResponse.js'
 
 const registerUser = asyncHandler( async(req, res) => {
     
@@ -49,7 +50,7 @@ const registerUser = asyncHandler( async(req, res) => {
   // check if avatar Exists
 
   if(!avatarLocalPath){
-    throw new ApiError(400 , 'Avatar Does not exists')
+    throw new ApiError(401 , 'Avatar Does not exists')
   }
   
   // checking the path of the files uploaded
@@ -60,26 +61,44 @@ const registerUser = asyncHandler( async(req, res) => {
   const cloudAvatar = await uploadOnCloudinary(avatarLocalPath)
   const cloudCoverImg = await uploadOnCloudinary(coverImgLocalPath)
 
+  console.log(req.files)
+  
+
   if(!cloudAvatar) {
    throw new ApiError(400 , "Avatar not uploaded to cloudinary")
   }
 
   //creating an record and sending to database using User model
-   User.create({
+   const newUser = await User.create({
       fullName,
       avatar: cloudAvatar.url,
       coverImg: cloudCoverImg?.url || " " ,
       email,
       username: username.toLowerCase(),
+      password
 
    })
 
-
- 
-   res.status(200).json({
-      text: "User has been Registered"
-   })
+   console.log('this is the user entered' , newUser);
    
+
+    // check if the user has been created in the database
+
+  
+   const createdUser = await User.findById(newUser._id).select(
+         "-password -refreshToken"
+   )
+
+   if (!createdUser){
+      throw new ApiError(500 , 'User has not been registered in the database')
+   }
+
+
+   return res.status(201).json(
+
+      new ApiResponse(200 , createdUser , "User Created Successfully"  )
+
+   )
 
 
 })

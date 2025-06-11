@@ -1,5 +1,5 @@
 import { v2 as cloudinary } from "cloudinary";
-import { log } from "console";
+
 import fs from "fs";
 
 // Configuration
@@ -17,10 +17,12 @@ const uploadOnCloudinary = async (localFilePath) => {
       resource_type: "auto",
     });
 
-    console.log('File has been successfully uploaded and its url is:' , response.url);
+    if(fs.existsSync(localFilePath)){
+      fs.unlinkSync(localFilePath)
+      console.log(`File has been deleted: ${localFilePath}`);
+      
+    }
     
-
-    fs.unlinkSync(localFilePath); // unlinking after successful uoload to the cloud
     return response;
   } catch (err) {
     console.log(err);
