@@ -31,9 +31,8 @@ const generateAccessAndRefreshTokens = async(userID) => {
 
 }
 
-const registerUser = asyncHandler( async(req, res) => {
-    
-   // take data from the frontend 
+// Register User Logic
+// take data from the frontend 
    // perform validation that is required
    // upload to cloudinary, the images and check for images that returns an URL 
    // create a user Object to store it in MongoDb
@@ -44,6 +43,8 @@ const registerUser = asyncHandler( async(req, res) => {
 
    // req.body gains takes data from frontend that is sent from form or as a JSON format
 
+const registerUser = asyncHandler( async(req, res) => {
+    
    const {fullName , email , username , password} = req.body 
    
    console.log('Hi,', fullName);
@@ -131,6 +132,7 @@ const registerUser = asyncHandler( async(req, res) => {
 })
 
 
+//  User Login Logic
 // take data from front end using req body
 //  perform validationa on the input
 // check if values exist in database - GET request
@@ -140,8 +142,6 @@ const registerUser = asyncHandler( async(req, res) => {
 //   - finds the user and then generates tokens
 //   - Returns the tokens
 // send secure cookies and response
-
-
 
 const loginUser = asyncHandler(async(req,res) => {
 
@@ -210,6 +210,7 @@ const loginUser = asyncHandler(async(req,res) => {
        
 })
 
+//  User Logout Logic
 //Logout user
 // 1. Create a middle ware to add user info to the incomming request
 // - find user
@@ -250,19 +251,21 @@ const logoutUser = asyncHandler(async(req,res) => {
 
 })
 
-const refreshAccessToken = asyncHandler(async() => {
+
+const refreshAccessToken = asyncHandler(async(req,res) => {
   
-  const incomingRefreshToken = req.cookies.refreshToken || req.body.refreshToken
+  const incomingRefreshToken = req.cookies.refreshToken
+ || req.body.refreshToken
 
   if(!incomingRefreshToken){
-    throw new ApiError(401, "Invalid Refresh Request")
+    throw new ApiError(400, "Invalid Refresh Request")
   }
 
   const decodedToken = jwt.verify(incomingRefreshToken , process.env.REFRESH_TOKEN_SECRET)
 
   // accessing the user
 
-  const user = User.findById(decodedToken._id)
+  const user = await User.findById(decodedToken._id)
 
   if(!user){
    throw new ApiError(401 , "Invalid Refresh Token")
@@ -270,25 +273,25 @@ const refreshAccessToken = asyncHandler(async() => {
 
 
   if(incomingRefreshToken !== user?.refreshToken){
-   throw new ApiError(401 , "Refresh Token Expired")
+   throw new ApiError(402 , "Refresh Token Expired")
   }
 
-  options ={
+ const options ={
    httpOnly: true,
    secure: true
   }
 
-  const {newAccessToken , newRefreshToken} = await generateAccessAndRefreshTokens(user._id)
+  const {accessToken , refreshToken} = await generateAccessAndRefreshTokens(user._id)
 
   res
   .status(200)
-  .cookie("AccessToken" , newAccessToken , options)
-  .cookie("RefreshToken" , newRefreshToken , options)
+  .cookie("accessToken" , accessToken , options)
+  .cookie("refreshToken" , refreshToken , options)
   .json(
    new ApiResponse(
       200,
       {
-         user_data : newAccessToken , newRefreshToken
+         user_data : accessToken , refreshToken
       },
       "Access Token Successfully regenerated"
    )
@@ -296,7 +299,58 @@ const refreshAccessToken = asyncHandler(async() => {
 
 })
 
+// Changing Password Logic
+// 1. access the user from the req using JWT middleware
+// 2. access the User
+// 3. Validate the Password
+// 4. update the password and save
+
+const changeCurrentPassword = asyncHandler(async(req,res) => {
+   
+   const {oldPassword , newPassword , confirmNewPassword} = req.body
+   
+   if(newPassword !== confirmNewPassword){
+      throw new ApiError(400 , "The New password does not match")
+   }
+
+   const user = User.findById(req.user?._id)
+
+   const isPasswordCorrect  = await user.isPasswordCorrect(oldPassword)
+
+   if(!isPasswordCorrect){
+      throw new ApiError(400 , "Old password is incorrect")
+   }
+
+   user.password = newPassword
+
+   await user.save({validateBeforeSave: false })
+
+   return res
+   .status(200)
+   .json(
+      new ApiResponse(
+         200,
+         {
+            userPassword: newPassword
+         },
+         "Password has been succesfully changed"
+      )
+   )
+  
+
+})
+
+const getCurrentUser = asyncHandler(async(req,res) => {
+   return res
+   .status(200)
+   .json(
+      new ApiResponse(
+         200,
+         req.user,
+         "User has been successfully fetched"
+      )
+   )
+})
 
 
-
-export {registerUser , loginUser , logoutUser} 
+export {registerUser , loginUser , logoutUser , refreshAccessToken , changeCurrentPassword ,getCurrentUser} 
