@@ -9,7 +9,7 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET,
 });
 
-const uploadOnCloudinary = async (localFilePath) => {
+ export const uploadOnCloudinary = async (localFilePath) => {
   try {
     if (!localFilePath) return null;
 
@@ -31,4 +31,19 @@ const uploadOnCloudinary = async (localFilePath) => {
   }
 };
 
-export default uploadOnCloudinary;
+ export const deleteFromCloudinary = async(oldURL) => {
+
+try {
+    if(!oldURL){
+      return 
+    }
+  
+    const result = await cloudinary.uploader.destroy(oldURL)
+  
+   return result
+} catch (error) {
+  return error  
+}
+  
+}
+

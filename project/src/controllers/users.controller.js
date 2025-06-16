@@ -1,7 +1,7 @@
 import { User } from '../models/user.model.js'
 import ApiError from '../utils/ApiErrors.js'
 import asyncHandler from '../utils/asyncHandler.js'
-import uploadOnCloudinary from '../utils/Cloudinary.js'
+import {uploadOnCloudinary , deleteFromCloudinary} from '../utils/Cloudinary.js'
 import ApiResponse from '../utils/ApiResponse.js'
 import jwt from 'jsonwebtoken'
 
@@ -400,6 +400,8 @@ const updateAccountDetails = asyncHandler(async(req , res) => {
 
 const updateAvatar = asyncHandler(async(req,res) => {
 
+   let deleteResult = null;
+
    const newAvatarLocalPath = req.file?.path
 
    if(!newAvatarLocalPath){
@@ -412,11 +414,17 @@ const updateAvatar = asyncHandler(async(req,res) => {
       throw new ApiError(401 , "Unsuccessful Avatar upload on cloudinary")
    }
 
-   const user = User.findByIdAndUpdate(
+   const existingUser = await User.findById(req.user?._id)
+
+   if(existingUser.avatar){
+     deleteResult = await deleteFromCloudinary(existingUser.avatar.public_id)
+   }
+
+   const user = await User.findByIdAndUpdate(
       req.user?._id,
       {
          $set: {
-            avatar:avatarURL
+            avatar:avatarURL.url
          }
       },
       {
@@ -428,9 +436,10 @@ const updateAvatar = asyncHandler(async(req,res) => {
    .status(200)
    .json(new ApiResponse(
       200,
-      user,
+      {user , deleteResult},
       "Avatar has been successfully updated"
    ))
+   
 
 })
 
@@ -448,11 +457,18 @@ const updateCoverImage = asyncHandler(async(req,res) => {
       throw new ApiError(401 , "Unsuccessful image cover upload on cloudinary")
    }
 
-   const user = User.findByIdAndUpdate(
+   const existingUser = await User.findById(req.user?._id)
+
+   const deleteResult = await deleteFromCloudinary(existingUser.coverImage) 
+
+   console.log(deleteResult);
+
+
+   const user = await User.findByIdAndUpdate(
       req.user?._id,
       {
          $set: {
-            coverImage: imageCoverURL
+            coverImage: imageCoverURL.url
          }
       },
       {
