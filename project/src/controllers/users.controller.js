@@ -486,6 +486,50 @@ const updateCoverImage = asyncHandler(async(req,res) => {
 
 })
 
+const getUserChannelProfile = asyncHandler(async(req,res) => {
+
+   const {username} = req.params
+   
+   if(!username){
+      throw new ApiError(400, "The Channel Does not Exist")
+   }
+
+   const channel = await User.aggregate([
+
+      {
+         $match:{
+            username : username.toLowerCase()
+         }
+      },
+      {
+         $lookup:{
+            from:'subscription',
+            localField:'_id',
+            foreignField:'channel',
+            as:'subscribers'
+         }
+
+      },
+      {
+         $lookup:{
+            from:'subscription',
+            localField:'_id',
+            foreignField:'subscriber',
+            as:'subscribedTo'
+         }
+
+      },
+      {
+         $addFields:{
+            subscribersCount : {$size : "$subscribers"},
+            channelSubscribedToCount : {$size: "$subscribedTo"}
+         }
+      }
+
+   ])
+
+})
+
 
 export {registerUser, 
    loginUser , 
