@@ -494,7 +494,7 @@ const getUserChannelProfile = asyncHandler(async(req,res) => {
       throw new ApiError(400, "The Channel Does not Exist")
    }
 
-   const channel = await User.aggregate([
+   const channelData = await User.aggregate([
 
       {
          $match:{
@@ -522,11 +522,42 @@ const getUserChannelProfile = asyncHandler(async(req,res) => {
       {
          $addFields:{
             subscribersCount : {$size : "$subscribers"},
-            channelSubscribedToCount : {$size: "$subscribedTo"}
+            channelSubscribedToCount : {$size: "$subscribedTo"},
+            isSubscribed : {
+               $cond:{
+                  if: {$in : [req.user?._id, "$subscribers.subscriber"]},
+                  then: true,
+                  else:false
+               }
+            }
+         }
+      },
+      {
+         $project:{
+            fullName : 1,
+            username : 1,
+            subscribersCount: 1,
+            channelSubscribedToCount: 1,
+            isSubscribed: 1,
+            avatar: 1,
+            coverImage: 1,
+            email: 1,
          }
       }
 
    ])
+
+   if(!channelData){
+      throw new ApiError(400, "Channel Does not Exist")
+   }
+
+   return res
+   .status(200)
+   .json(new ApiResponse(
+      200,
+      channelData[0],
+      "Channel Data Retrieved Successfully"
+   ))
 
 })
 
@@ -539,4 +570,5 @@ export {registerUser,
    getCurrentUser,
    updateAccountDetails,
    updateAvatar,
-   updateCoverImage} 
+   updateCoverImage,
+   getUserChannelProfile} 
