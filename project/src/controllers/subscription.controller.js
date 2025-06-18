@@ -119,6 +119,63 @@ const unsubscribeToChannel = asyncHandler(async(req,res) => {
 // 3. use MongoDB pipeline : match -> lookup (based on channel)->project
 
 const getSubscribers = asyncHandler(async(req, res) => {
+
+    const {channelName} = req.params
+
+    if(!channelName){
+        throw new ApiError(400, 'Params Value not properly provided')
+    }
+
+    const channel = await User.aggregate([
+        {
+            $match:{
+                username : channelName.toLowerCase()
+            }
+        },
+        {
+            $lookup:{
+                from:'subscription',
+                localField: '_id',
+                foreignField: 'channel',
+                as: 'subscribers'
+            }
+        },
+        {
+            $addFields : {
+                subscriberCount : {$size : '$subscribers'},
+                subscriberIDs : {
+                    $map:{
+                        input: '$subscribers',
+                        as:'sub',
+                        in:'$$sub.channel'
+                    }
+                }
+            }
+        },
+        {
+            $project:{
+                username : 1,
+                subscriberCount : 1,
+                subscriberIDs : 1
+            }
+        }
+    ])
+
+    if(!channel){
+        throw new ApiError(404, "Channel Does not exist")
+    }
+
+    return res
+    .status(200)
+    .json(
+        new ApiResponse(
+            200,
+            channel,
+            "Channel Subscribers Retrieved Successfully"
+        )
+    )
+
+    
   
 })
 
@@ -126,5 +183,6 @@ const getSubscribers = asyncHandler(async(req, res) => {
 
 export {
     subscribeToChannel,
-    unsubscribeToChannel
+    unsubscribeToChannel,
+    getSubscribers
 }
