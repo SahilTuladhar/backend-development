@@ -133,11 +133,13 @@ const getSubscribers = asyncHandler(async(req, res) => {
             }
         },
         {
+            
+
             $lookup:{
-                from:'subscription',
+                from:'subscriptions',
                 localField: '_id',
                 foreignField: 'channel',
-                as: 'subscribers'
+                as:'subscribers'
             }
         },
         {
@@ -147,7 +149,7 @@ const getSubscribers = asyncHandler(async(req, res) => {
                     $map:{
                         input: '$subscribers',
                         as:'sub',
-                        in:'$$sub.channel'
+                        in:'$$sub.subscriber'
                     }
                 }
             }
@@ -161,9 +163,11 @@ const getSubscribers = asyncHandler(async(req, res) => {
         }
     ])
 
-    if(!channel){
-        throw new ApiError(404, "Channel Does not exist")
+     // Fixed: Check if array is empty
+    if(!channel || channel.length === 0){
+        throw new ApiError(404, "Channel does not exist")
     }
+    
 
     return res
     .status(200)

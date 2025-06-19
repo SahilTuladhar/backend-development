@@ -1,6 +1,6 @@
 
 import {Router} from 'express'
-import {registerUser , loginUser, logoutUser, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateAvatar, updateCoverImage} from '../controllers/users.controller.js'
+import {registerUser , loginUser, logoutUser, changeCurrentPassword, getCurrentUser, updateAccountDetails, updateAvatar, updateCoverImage, getUserChannelProfile , getWatchHistory} from '../controllers/users.controller.js'
 import {upload} from '../middlewares/multer.middleware.js'
 import verifyJWT from '../middlewares/auth.middleware.js'
 import { refreshAccessToken } from '../controllers/users.controller.js'
@@ -40,11 +40,19 @@ userRouter.route('/update-avatar').post(
     updateAvatar
 )
 
-
 userRouter.route('/update-cover-image').post(
     upload.single("coverImage"),
     verifyJWT,
     updateCoverImage
+)
+
+userRouter.route('/get-channel-profile/:username').get(
+    getUserChannelProfile
+)
+
+userRouter.route('./get-watch-history').get(
+    verifyJWT,
+    getWatchHistory
 )
 
 
