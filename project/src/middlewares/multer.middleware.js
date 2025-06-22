@@ -17,3 +17,4 @@ export const upload = multer({
     storage: storage,
 })
 
+// NOTE: This multer method returns req.file object that contains the local path of all the files uploa

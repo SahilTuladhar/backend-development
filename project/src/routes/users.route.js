@@ -32,17 +32,17 @@ userRouter.route('/change-password').post(verifyJWT, changeCurrentPassword)
 
 userRouter.route('/get-current-user').post(verifyJWT , getCurrentUser)
 
-userRouter.route('/update-account-details').post(verifyJWT , updateAccountDetails)
+userRouter.route('/update-account-details').patch(verifyJWT , updateAccountDetails)
 
-userRouter.route('/update-avatar').post(
-    upload.single("avatar"),
+userRouter.route('/update-avatar').patch(
     verifyJWT,
+    upload.single("avatar"),
     updateAvatar
 )
 
-userRouter.route('/update-cover-image').post(
-    upload.single("coverImage"),
+userRouter.route('/update-cover-image').patch(
     verifyJWT,
+    upload.single("coverImage"),
     updateCoverImage
 )
 

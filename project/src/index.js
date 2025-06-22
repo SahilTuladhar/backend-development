@@ -22,9 +22,9 @@ app.on('error' , (err) => {
 })
 
 app.listen(process.env.PORT || 4000, () => {
-    console.log(`Server sucessfully running at port ${process.env.PORT}`);
-    
+    console.log(`Server sucessfully running at port ${process.env.PORT}`); 
 })
+
 })
 .catch((err) => {
     console.log("MongoDB connection Failed :" , err);
