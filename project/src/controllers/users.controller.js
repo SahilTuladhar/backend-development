@@ -551,6 +551,9 @@ const getUserChannelProfile = asyncHandler(async(req,res) => {
 
    ])
 
+   console.log(channelData);
+   
+
    if(!channelData){
       throw new ApiError(400, "Channel Does not Exist")
    }
@@ -629,6 +632,51 @@ const getWatchHistory = asyncHandler(async(req,res) => {
 
 })
 
+const getVideosUploaded = asyncHandler(async(req,res) => {
+    
+   const userWithVideoData = await User.aggregate([
+      {
+         $match : {
+            _id: new mongoose.Types.ObjectId(req.user._id)
+         }
+      },
+      {
+         $lookup: {
+            from: 'videos',
+            localField: '_id',
+            foreignField: "owner",
+            as: 'videosUploaded'
+         }
+      },
+      {
+         $addFields: {
+            videosCount : { $size : "$videosUploaded"}
+         }
+      },
+      {
+         $project: {
+           fullName : 1,
+           username: 1,
+           email: 1,
+           videosUploaded: 1,
+           videosCount: 1
+         }
+      }
+   ])
+
+   return res
+   .status(200)
+   .json(
+      new ApiResponse(
+         200,
+         userWithVideoData[0],
+         'Videos uploaded successfully Fetched'
+      )
+   )
+      
+
+})
+
 
 export {registerUser, 
    loginUser , 
@@ -640,5 +688,6 @@ export {registerUser,
    updateAvatar,
    updateCoverImage,
    getUserChannelProfile,
-   getWatchHistory
+   getWatchHistory,
+   getVideosUploaded
 } 
